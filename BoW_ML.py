@@ -27,11 +27,6 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
 
-'''
-
-Usage:  : python doc2vec.py [text_path] [label_path]
-
-'''
 def is_number(s):
     try:
         float(s)
@@ -47,7 +42,6 @@ def multiclass_roc_auc_score(y_true, y_pred, average='macro'):
     return roc_auc_score(y_true, y_pred, average="weighted")
 
 def preprocessing(text, gene_dict):
-    #text = text.decode("utf8")
     # tokenize into words
     tokens = [word for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
     # remove stopwords
@@ -72,19 +66,14 @@ def preprocessing(text, gene_dict):
     return preprocessed_text
 
 def main():
-
     # abstract number  3830
-    abstract_size = 3000
+    abstract_size = 3830
     # gene replacement list size in gene.csv
     gene_size = 80
-
-
     print ''
     print "--- Loading data ---"
     dataset = pd.read_csv('abstract.csv', sep=',', encoding='utf-8')
-
     dataset = dataset.dropna(subset=['abstract_text', 'penetrance', 'incidence']) # remove nan column
-
     texts = dataset.ix[0:abstract_size, 3].values.tolist()
 
     # ix[:, 8] = penetrance, ix[:, 9] = incidence
@@ -97,34 +86,28 @@ def main():
     print "Read %d rows of data" % len(texts)
     print "Read %d rows of label" % len(label)
 
-####################################################################################
+    #### load gene.csv as the disctionary to replace the gene name 
     gene_dataset = pd.read_csv('gene.csv', sep=',', encoding='latin-1')
-    # cancer_replace = pd.read_csv('cancer.csv', sep=',', encoding='utf-8')
     gene_name = gene_dataset.ix[0:gene_size, 0].values.tolist()
     gene_replace = gene_dataset.ix[0:gene_size, 9].values.tolist()
     gene_dict = {}
     for i in range(len(gene_name)):
         gene_dict[gene_name[i]]=gene_replace[i]
 
-    # print len(gene_dict)
-
-####################################################################################
-
     print ''
     print "--- Text processing ---"
-
     sms_exp = []
     for line in texts:
         sms_exp.append(preprocessing(line, gene_dict))
 
-##################### Term-frequency ###################################
+### Term-frequency 
 
     from sklearn.feature_extraction.text import CountVectorizer
     vectorizer = CountVectorizer(min_df = 1, encoding='utf-8')
     X = vectorizer.fit_transform(sms_exp)
     X = X.toarray()
-##################### Tf-idf ###################################
 
+### Tf-idf 
     # from sklearn.feature_extraction.text import TfidfVectorizer
     # vectorizer = TfidfVectorizer(min_df = 2, ngram_range=(1, 2),
     #                              stop_words = 'english', strip_accents = 'unicode', norm = 'l2')
@@ -132,9 +115,7 @@ def main():
     # X = vectorizer.fit_transform(sms_exp)
     # X = X.toarray()
 
-########################################################
-
-
+### machine learning algorithm
     alg_list = [\
         LogisticRegression(penalty='l1', multi_class='ovr', class_weight=None, n_jobs=-1), \
         LogisticRegression(penalty='l2', multi_class='ovr', class_weight=None, n_jobs=-1), \
@@ -147,7 +128,7 @@ def main():
         #GradientBoostingClassifier(n_estimators=100, learning_rate=1.0, max_depth=1, random_state=0)] # GBM can't use sparse matrix, scikit-learn problem
         MLPClassifier(solver='adam', alpha=1e-5, hidden_layer_sizes=(128, 64, 32), random_state=42), \
         ]
- 
+    ### k-fold cross validation
     k=5
     for a in alg_list:
         skf = StratifiedKFold(y, n_folds=k, shuffle=True, random_state=None)

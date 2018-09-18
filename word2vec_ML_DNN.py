@@ -105,7 +105,7 @@ def max_pool_2x2(x):
 def main():
 
     # abstract number  3830
-    abstract_size = 3000
+    abstract_size = 3830
     # gene replacement list size in gene.csv
     gene_size = 70
     cancer_size = 341
@@ -136,7 +136,6 @@ def main():
     for i in range(len(gene_name)):
         gene_dict[gene_name[i]]=gene_replace[i]
 
-####################################################################################
 
     print( '')
     print( "--- Text processing ---")
@@ -148,7 +147,7 @@ def main():
 
     X = np.array(doc_vec)
 
-################## Traditional ML model #####################################
+### Traditional ML model 
 
     alg_list = [\
         LogisticRegression(penalty='l1', multi_class='ovr', class_weight=None, n_jobs=-1), \
@@ -163,7 +162,7 @@ def main():
         MLPClassifier(solver='adam', alpha=1e-5, hidden_layer_sizes=(128, 64, 32), random_state=42), \
         ]
   
-
+    ### k-fold cross validation
     k=5
     for a in alg_list:
         skf = StratifiedKFold(y, n_folds=k, shuffle=True, random_state=None)
@@ -193,7 +192,7 @@ def main():
         print( '\nacc :' + str(acc_total/k)+'\npr :' + str(pr_total/k)+'\nre :' + str(re_total/k)+'\nf1 :' + str(f1_total/k)+'\nauc :' + str(auc_total/k))
         print( '###############################################################')
 
-######################## DNN model #####################
+### DNN model 
     input_size = X.shape[1]
     N_class = 2
     x = tf.placeholder(tf.float32, [None, input_size])
